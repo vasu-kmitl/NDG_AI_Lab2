@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 30,
+      "includeFiles": "node_modules/@tensorflow/tfjs-backend-wasm/dist/*.wasm"
+    }
+  }
+}

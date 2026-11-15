@@ -1,0 +1,42 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leaf Doctor</title>
+<script src="config.js"></script>
+<style>
+:root{--c:#3ddc97}
+body{margin:0;font-family:system-ui,-apple-system,"Noto Sans Thai",sans-serif;background:#0a1433;color:#fff}
+main{max-width:480px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:26px;margin:4px 0}p.s{color:#c9d6f5;margin:0 0 16px}
+label.b{display:block;text-align:center;padding:18px;border-radius:14px;background:var(--c);color:#0a1433;font-weight:700;font-size:20px;cursor:pointer}
+input{display:none}img{width:100%;border-radius:14px;margin-top:16px;display:none}
+.top{font-size:26px;font-weight:700;margin-top:14px}.adv{margin-top:10px;padding:12px 14px;border-radius:12px;background:#ffffff14;border-left:5px solid var(--c);line-height:1.5}
+.row{margin:8px 0}.bar{height:14px;border-radius:7px;background:#ffffff22;overflow:hidden}.bar i{display:block;height:100%;background:#8fb8ff}
+.row:first-child .bar i{background:var(--c)}small{display:block;color:#c9d6f5;margin-top:12px;line-height:1.5}
+</style></head><body><main>
+<h1 id="name">🌿 Leaf Doctor</h1><p class="s" id="sub"></p>
+<label class="b">📷 ถ่ายรูป / เลือกรูป<input id="f" type="file" accept="image/*" capture="environment"></label>
+<img id="pv" alt="รูปที่เลือก"><div class="top" id="top"></div><div class="adv" id="adv" style="display:none"></div>
+<div id="r" style="margin-top:12px"></div><small id="t"></small>
+</main><script>
+const A=window.APP||{};document.title=A.name||'Leaf Doctor';
+document.getElementById('name').textContent='🌿 '+(A.name||'Leaf Doctor');
+document.getElementById('sub').textContent=A.subtitle||'';
+if(A.color)document.documentElement.style.setProperty('--c',A.color);
+const $=id=>document.getElementById(id);
+// ย่อรูปในมือถือก่อนส่ง (ด้านยาวไม่เกิน 512 px) ให้ส่งเร็วและประหยัดเน็ต
+function shrink(file){return new Promise((ok,bad)=>{const im=new Image();im.onload=()=>{const k=Math.min(1,512/Math.max(im.width,im.height));
+const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+ok(c.toDataURL('image/jpeg',0.85));};im.onerror=bad;im.src=URL.createObjectURL(file);});}
+$('f').onchange=async()=>{const file=$('f').files[0];if(!file)return;
+$('pv').src=URL.createObjectURL(file);$('pv').style.display='block';$('r').innerHTML='';$('adv').style.display='none';$('t').textContent='';
+$('top').textContent='กำลังส่งให้ AI บน cloud ทาย...';const t0=performance.now();
+try{const img=await shrink(file);
+const res=await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:img})});
+const j=await res.json();if(j.error){$('top').textContent='⚠️ '+j.error;return;}
+$('top').textContent=j.label+' '+Math.round(j.confidence*100)+'%';
+const AD=A.advice||{},L=String(j.label||'').toLowerCase(),K=Object.keys(AD).find(k=>k===j.label)||Object.keys(AD).find(k=>L.startsWith(k.toLowerCase()));const adv=K?AD[K]:'';if(adv){$('adv').textContent=adv;$('adv').style.display='block';}
+$('r').innerHTML=j.scores.map(s=>'<div class="row">'+s.label+' '+Math.round(s.p*100)+'%<div class="bar"><i style="width:'+(s.p*100)+'%"></i></div></div>').join('');
+const all=Math.round(performance.now()-t0);
+$('t').textContent='AI ทาย '+j.ms+' ms · ทั้งหมดรวมส่งรูปไป–กลับ '+all+' ms'+(j.totalMs-j.ms>2000?' · ครั้งนี้ช้าเพราะ cloud เพิ่งตื่น (cold start)':'');
+}catch(e){$('top').textContent='⚠️ ส่งรูปไม่สำเร็จ ลองใหม่อีกครั้ง';}};
+</script></body></html>

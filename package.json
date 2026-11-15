@@ -1,0 +1,13 @@
+{
+  "name": "leaf-doctor",
+  "version": "2.0.0",
+  "private": true,
+  "description": "แอปถ่ายรูปใบพืช ส่งให้โมเดล Teachable Machine ทายบน serverless (Vercel) · ESP32 ส่งรูปมาได้ด้วย",
+  "scripts": { "dev": "node dev-server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@tensorflow/tfjs": "4.22.0",
+    "@tensorflow/tfjs-backend-wasm": "4.22.0",
+    "jpeg-js": "0.4.4"
+  }
+}
